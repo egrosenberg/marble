@@ -26,21 +26,21 @@ const double pi = std::acos(-1); // or std::numbers::pi since C++20
 void data_callback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount)
 {
   uint32_t nSamples = frameCount * 2;
+  song2->getFrames((float *)pOutput, frameCount);
+  // song->getFrames((float *)pOutput, frameCount);
 
-  song->getFrames((float *)pOutput, frameCount);
-
-  float *song2Frames = (float *)malloc(sizeof(float) * nSamples);
-  song2->getFrames(song2Frames, frameCount);
+  // float *song2Frames = (float *)malloc(sizeof(float) * nSamples);
+  // song2->getFrames(song2Frames, frameCount);
 
   // Copy data into channels
   float *pOutputFrames = (float *)pOutput;
 
-  for (uint16_t i = 0; i < nSamples; ++i)
-  {
-    pOutputFrames[i] += song2Frames[i];
-    // channels[i] = 0;
-    x++;
-  }
+  // for (uint16_t i = 0; i < nSamples; ++i)
+  // {
+  //   pOutputFrames[i] += song2Frames[i];
+  //   // channels[i] = 0;
+  //   x++;
+  // }
 }
 
 int main()

@@ -64,9 +64,13 @@ void Song::getFrames(float *pOutput, uint32_t frameCount)
     std::vector<double> YR;
     for (uint16_t i = 0, j = 0; i < realSampleCount;)
     {
-      X.push_back(j++);
-      YL.push_back(realOutput[i++]);
-      YR.push_back(realOutput[i++]);
+      // Don't count frames past end of track
+      if (i + getCurrentFrame() < m_frames)
+      {
+        X.push_back(j++);
+        YL.push_back(realOutput[i++]);
+        YR.push_back(realOutput[i++]);
+      }
     }
     tk::spline leftSpline(X, YL);
     tk::spline rightSpline(X, YR);
@@ -74,8 +78,17 @@ void Song::getFrames(float *pOutput, uint32_t frameCount)
     for (uint32_t i = 0; i < frameCount; ++i)
     {
       float sampleFrame = (float)i * ratio;
-      pOutput[i * 2] = leftSpline(sampleFrame);
-      pOutput[i * 2 + 1] = rightSpline(sampleFrame);
+      // Zero out frames past end of track
+      if (std::ceil(sampleFrame) + getCurrentFrame() >= m_frames)
+      {
+        pOutput[i * 2] = 0;
+        pOutput[i * 2 + 1] = 0;
+      }
+      else
+      {
+        pOutput[i * 2] = leftSpline(sampleFrame);
+        pOutput[i * 2 + 1] = rightSpline(sampleFrame);
+      }
     }
   }
 
