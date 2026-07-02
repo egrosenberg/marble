@@ -1,4 +1,4 @@
-all: build/test
+all: bin/test
 
 .PHONY: all
 
@@ -6,7 +6,7 @@ build:
 	@echo "building directory $@"
 	mkdir $@
 
-build/test: build/index.o build/song.o | build
+bin/test: build/index.o build/song.o | build
 	@echo building $@
 	g++ -I lib -msse2 -mavx2 -latomic -o $@ $^
 
