@@ -3,6 +3,7 @@
 
 #include <string>
 #include <cmath>
+#include <cstdint>
 
 #define PI 3.141592653589793238462643383279502884
 #define TARGET_SAMPLE_RATE 48000
