@@ -40,8 +40,6 @@ Song::Song(const char *fname)
 
 void Song::getFrames(float *pOutput, uint32_t frameCount)
 {
-  auto start = std::chrono::high_resolution_clock::now();
-
   uint32_t nSamples = frameCount * N_CHANNELS;
   memset(pOutput, 0, sizeof(float) * nSamples);
 
@@ -56,10 +54,11 @@ void Song::getFrames(float *pOutput, uint32_t frameCount)
   // Need to convert real audio frames into desired output frames
   else
   {
+    // Store actual output frames in a buffer
     float *realOutput = (float *)malloc(sizeof(float) * realSampleCount);
     drmp3_read_pcm_frames_f32(&m_song, realFrameCount, realOutput);
 
-    // cubic interpolation variables
+    // construct splines for each channel
     std::vector<double> X;
     std::vector<double> YL;
     std::vector<double> YR;
@@ -74,58 +73,9 @@ void Song::getFrames(float *pOutput, uint32_t frameCount)
 
     for (uint32_t i = 0; i < frameCount; ++i)
     {
-      uint32_t left = i * 2;
-      uint32_t right = i * 2 + 1;
       float sampleFrame = (float)i * ratio;
-      float sampleTime = sampleFrame;
-
-      pOutput[left] = leftSpline(sampleTime);
-      pOutput[right] = rightSpline(sampleTime);
-
-      // THIS HOPEFULLY WILL HELP INTERPOLATE FOR DIFFERING SAMPLE RATES?
-
-      // https://en.wikipedia.org/wiki/Whittaker%E2%80%93Shannon_interpolation_formula
-      // float T = m_sampleDuration;
-      // float t = sampleFrame * m_sampleDuration;
-      // double resL = 0;
-      // double resR = 0;
-
-      // uint32_t padding = std::min(std::min(sampleFrame, realFrameCount - sampleFrame), 200.0f);
-      // uint32_t start = uint32_t(sampleFrame - padding);
-      // uint32_t end = uint32_t(sampleFrame + padding);
-
-      // for (uint32_t n = sampleFrame - padding; n <= sampleFrame + padding; ++n)
-      // {
-      //   float nT = n * T;
-      //   resL += realOutput[n * 2] * sinc((t - nT) / T) * 0.5;
-      //   resR += realOutput[n * 2 + 1] * sinc((t - nT) / T) * 0.5;
-      // }
-
-      // uint16_t x0 = std::floor(sampleFrame);
-      // uint16_t x1 = std::ceil(sampleFrame);
-
-      // pOutput[left] = lineop(x0, x1, realOutput[x0 * 2], realOutput[x0 * 2], sampleFrame);
-      // pOutput[right] = lineop(x0, x1, realOutput[x0 * 2 + 1], realOutput[x0 * 2 + 1], sampleFrame);
-
-      // pOutput[left] = resL;
-      // pOutput[right] = resR;
-
-      // std::cout << "File: " << m_fname;
-      // std::cout << "\n  channels: " << m_channels;
-      // std::cout << "\n  sampleRate: " << m_sampleRate << " (" << ratio << ")";
-      // std::cout << "\n  sampleDuration: " << m_sampleDuration;
-      // std::cout << "\n  frames: " << m_frames;
-      // std::cout << "\n  duration: " << m_duration << std::endl;
-
-      // std::cout << "sampleRate: " << m_sampleRate
-      //           << "\n sampleFrame: " << sampleFrame
-      //           << "\n og1: " << og1 << ", og2:" << og2
-      //           << "\n diff1: " << diff1 << ", diff2: " << diff2
-      //           << "\n frame1L: " << frame1L << ", frame1R: " << frame1R
-      //           << "\n frame2L: " << frame2L << ", frame2R: " << frame2R
-      //           << "\n pOutput[left]: " << pOutput[left] << ", pOutput[right]: " << pOutput[right]
-      //           << "\n [left]: " << left << ", right: " << right
-      //           << std::endl;
+      pOutput[i * 2] = leftSpline(sampleFrame);
+      pOutput[i * 2 + 1] = rightSpline(sampleFrame);
     }
   }
 
@@ -137,8 +87,6 @@ void Song::getFrames(float *pOutput, uint32_t frameCount)
     }
   }
 
-  auto stop = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
   std::cout << "File: " << m_fname;
   // std::cout << "\n  channels: " << m_channels;
   // std::cout << "\n  sampleRate: " << m_sampleRate << " (" << ratio << ")";
@@ -146,8 +94,7 @@ void Song::getFrames(float *pOutput, uint32_t frameCount)
   // std::cout << "\n  frames: " << m_frames;
   // std::cout << "\n  duration: " << m_duration;
   // std::cout << "\n  frameCount: " << frameCount << ", realFrameCount: " << realFrameCount;
-  std::cout << "\n  procTime: " << duration.count();
-  std::cout << std::endl;
+  // std::cout << std::endl;
 
   std::string timeStr = formatTime((float)getCurrentTime());
   std::string durationStr = formatTime((float)m_duration);
