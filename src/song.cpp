@@ -40,20 +40,23 @@ Song::Song(const char *fname)
 
 void Song::getFrames(float *pOutput, uint32_t frameCount)
 {
-  uint32_t nSamples = frameCount * N_CHANNELS;
-  memset(pOutput, 0, sizeof(float) * nSamples);
+  std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
 
-  float ratio = (float)m_sampleRate / TARGET_SAMPLE_RATE;
-  uint32_t realFrameCount = frameCount * ratio;
-  uint32_t realSampleCount = realFrameCount * N_CHANNELS;
+  uint32_t nSamples = frameCount * m_channels;
 
   if (m_sampleRate == TARGET_SAMPLE_RATE)
   {
-    drmp3_read_pcm_frames_f32(&m_song, realFrameCount, pOutput);
+    drmp3_read_pcm_frames_f32(&m_song, frameCount, pOutput);
   }
   // Need to convert real audio frames into desired output frames
   else
   {
+    memset(pOutput, 0, sizeof(float) * nSamples);
+
+    float ratio = (float)m_sampleRate / TARGET_SAMPLE_RATE;
+    uint32_t realFrameCount = frameCount * ratio;
+    uint32_t realSampleCount = realFrameCount * m_channels;
+
     // Store actual output frames in a buffer
     float *realOutput = (float *)malloc(sizeof(float) * realSampleCount);
     drmp3_read_pcm_frames_f32(&m_song, realFrameCount, realOutput);
@@ -78,13 +81,8 @@ void Song::getFrames(float *pOutput, uint32_t frameCount)
     for (uint32_t i = 0; i < frameCount; ++i)
     {
       float sampleFrame = (float)i * ratio;
-      // Zero out frames past end of track
-      if (std::ceil(sampleFrame) + getCurrentFrame() >= m_frames)
-      {
-        pOutput[i * 2] = 0;
-        pOutput[i * 2 + 1] = 0;
-      }
-      else
+      // Don't process frames past end of track
+      if (std::ceil(sampleFrame) + getCurrentFrame() < m_frames)
       {
         pOutput[i * 2] = leftSpline(sampleFrame);
         pOutput[i * 2 + 1] = rightSpline(sampleFrame);
@@ -100,9 +98,14 @@ void Song::getFrames(float *pOutput, uint32_t frameCount)
     }
   }
 
-  std::string timeStr = formatTime((float)getCurrentTime());
-  std::string durationStr = formatTime((float)m_duration);
-  std::cout << m_fname << ": " << timeStr << '/' << durationStr << std::endl;
+  // std::string timeStr = formatTime((float)getCurrentTime());
+  // std::string durationStr = formatTime((float)m_duration);
+  // std::cout << m_fname << ": " << timeStr << '/' << durationStr << std::endl;
+
+  std::chrono::time_point<std::chrono::high_resolution_clock> end = std::chrono::high_resolution_clock::now();
+  std::chrono::microseconds duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+  std::cout << "Computed " << frameCount << " frames in " << duration << std::endl;
 }
 
 void Song::setVolume(float volume)
