@@ -3,16 +3,13 @@
 #define MINIAUDIO_IMPLEMENTATION
 
 #include "lib.h"
-#include "dr_mp3.h"
 #include "miniaudio.h"
 #include "song.h"
 
 #include <iostream>
-#include <cmath>
-#include <bitset>
+#include <getopt.h>
 
 #define FNAME "resources/test.mp3"
-#define FNAME_2 "resources/test2.mp3"
 
 drmp3_uint32 n_channels = 2;
 unsigned int channel_size = 16;
@@ -25,34 +22,59 @@ const double pi = std::acos(-1); // or std::numbers::pi since C++20
 
 void data_callback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount)
 {
-  uint32_t nSamples = frameCount * 2;
-  song2->getFrames((float *)pOutput, frameCount);
-  // song->getFrames((float *)pOutput, frameCount);
-
-  // float *song2Frames = (float *)malloc(sizeof(float) * nSamples);
-  // song2->getFrames(song2Frames, frameCount);
-
-  // Copy data into channels
-  float *pOutputFrames = (float *)pOutput;
-
-  // for (uint16_t i = 0; i < nSamples; ++i)
-  // {
-  //   pOutputFrames[i] += song2Frames[i];
-  //   // channels[i] = 0;
-  //   x++;
-  // }
+  song->getFrames((float *)pOutput, frameCount);
 }
 
-int main()
-{
-  song = new Song(FNAME);
+#define OPTION_INDEX_SAMPLE_RATE 0
+#define OPTION_INDEX_LIST 1
+#define OPTION_INDEX_SONG 2
 
-  song2 = new Song(FNAME_2);
+int main(int argc, char **argv)
+{
+  const char *songPath = FNAME;
+
+  // Getting options
+  int c = 0;
+  int this_option_optind = optind ? optind : 1;
+  int option_index = 0;
+  static struct option long_options[] = {
+      {"sample-rate", required_argument, 0, 0},
+      {"list", required_argument, 0, 0},
+      {"song", required_argument, 0, 0},
+      {0, 0, 0, 0}};
+
+  uint64_t sampleRate = TARGET_SAMPLE_RATE;
+
+  while (1)
+  {
+    c = getopt_long(argc, argv, "", long_options, &option_index);
+    if (c == -1)
+      break;
+
+    switch (c)
+    {
+    case 0:
+      switch (option_index)
+      {
+      case OPTION_INDEX_SAMPLE_RATE:
+        sampleRate = std::stoi(optarg);
+        printf("Setting sampleRate to %ukhz\n", sampleRate);
+        break;
+      case OPTION_INDEX_SONG:
+        songPath = optarg;
+        printf("Playing song from '%s'\n", songPath);
+      }
+
+      break;
+    }
+  }
+
+  song = new Song(songPath, sampleRate);
 
   ma_device_config config = ma_device_config_init(ma_device_type_playback);
   config.playback.format = ma_format_f32; // Set to ma_format_unknown to use the device's native format.
   config.playback.channels = 2;           // Set to 0 to use the device's native channel count.
-  config.sampleRate = TARGET_SAMPLE_RATE; // Set to 0 to use the device's native sample rate.
+  config.sampleRate = sampleRate;         // Set to 0 to use the device's native sample rate.
   config.dataCallback = data_callback;    // This function will be called when miniaudio needs more data.
   config.pUserData = NULL;                // Can be accessed from the device object (device.pUserData).
 

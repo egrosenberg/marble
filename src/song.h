@@ -7,7 +7,7 @@
 class Song
 {
 public:
-  Song(const char *fname);
+  Song(const char *fname, uint32_t targetSampleRate);
   virtual ~Song();
 
   // data callback for audio playing
@@ -26,6 +26,7 @@ private:
   drmp3 m_song;
   uint32_t m_channels;
   uint32_t m_sampleRate;
+  uint32_t m_targetSampleRate;
   double m_sampleDuration;
   uint64_t m_frames;
   double m_duration;
