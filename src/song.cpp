@@ -1,23 +1,19 @@
 #include "song.h"
-#include "lib.h"
 
-#include <iostream>
-#include <cstring>
-#include <algorithm>
 #include <cmath>
-#include <chrono>
+#include <cstring>
+#include <iostream>
+
 
 #include "spline.h"
 #include <vector>
 
 #define N_CHANNELS 2;
 
-Song::Song(const char *fname, uint32_t targetSampleRate)
-{
+Song::Song(const char *fname, uint32_t targetSampleRate) {
   m_targetSampleRate = targetSampleRate;
 
-  if (!drmp3_init_file(&m_song, fname, NULL))
-  {
+  if (!drmp3_init_file(&m_song, fname, nullptr)) {
     std::cerr << "ERROR: Failed to open file '" << fname << "'" << std::endl;
     // throw std::exception("Unable to open audio for read");
     throw 4;
@@ -41,19 +37,17 @@ Song::Song(const char *fname, uint32_t targetSampleRate)
   std::cout << "\n  duration: " << m_duration << std::endl;
 }
 
-void Song::getFrames(float *pOutput, uint32_t frameCount)
-{
-  // std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
+void Song::getFrames(float *pOutput, uint32_t frameCount) {
+  // std::chrono::time_point<std::chrono::high_resolution_clock> start =
+  // std::chrono::high_resolution_clock::now();
 
   uint32_t nSamples = frameCount * m_channels;
 
-  if (m_sampleRate == m_targetSampleRate)
-  {
+  if (m_sampleRate == m_targetSampleRate) {
     drmp3_read_pcm_frames_f32(&m_song, frameCount, pOutput);
   }
   // Need to convert real audio frames into desired output frames
-  else
-  {
+  else {
     memset(pOutput, 0, sizeof(float) * nSamples);
 
     float ratio = (float)m_sampleRate / m_targetSampleRate;
@@ -68,11 +62,9 @@ void Song::getFrames(float *pOutput, uint32_t frameCount)
     std::vector<double> X;
     std::vector<double> YL;
     std::vector<double> YR;
-    for (uint16_t i = 0, j = 0; i < realSampleCount;)
-    {
+    for (uint16_t i = 0, j = 0; i < realSampleCount;) {
       // Don't count frames past end of track
-      if (i + getCurrentFrame() < m_frames)
-      {
+      if (i + getCurrentFrame() < m_frames) {
         X.push_back(j++);
         YL.push_back(realOutput[i++]);
         YR.push_back(realOutput[i++]);
@@ -81,22 +73,18 @@ void Song::getFrames(float *pOutput, uint32_t frameCount)
     tk::spline leftSpline(X, YL);
     tk::spline rightSpline(X, YR);
 
-    for (uint32_t i = 0; i < frameCount; ++i)
-    {
+    for (uint32_t i = 0; i < frameCount; ++i) {
       float sampleFrame = (float)i * ratio;
       // Don't process frames past end of track
-      if (std::ceil(sampleFrame) + getCurrentFrame() < m_frames)
-      {
+      if (std::ceil(sampleFrame) + getCurrentFrame() < m_frames) {
         pOutput[i * 2] = leftSpline(sampleFrame);
         pOutput[i * 2 + 1] = rightSpline(sampleFrame);
       }
     }
   }
 
-  if (m_volume != 1.0f)
-  {
-    for (uint32_t i = 0; i < nSamples; ++i)
-    {
+  if (m_volume != 1.0f) {
+    for (uint32_t i = 0; i < nSamples; ++i) {
       pOutput[i] *= m_volume;
     }
   }
@@ -105,30 +93,26 @@ void Song::getFrames(float *pOutput, uint32_t frameCount)
   // std::string durationStr = formatTime((float)m_duration);
   // std::cout << m_fname << ": " << timeStr << '/' << durationStr << std::endl;
 
-  // std::chrono::time_point<std::chrono::high_resolution_clock> end = std::chrono::high_resolution_clock::now();
-  // std::chrono::microseconds duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  // std::chrono::time_point<std::chrono::high_resolution_clock> end =
+  // std::chrono::high_resolution_clock::now(); std::chrono::microseconds
+  // duration = std::chrono::duration_cast<std::chrono::microseconds>(end -
+  // start);
 
-  // std::cout << "Computed " << frameCount << " frames in " << duration << std::endl;
+  // std::cout << "Computed " << frameCount << " frames in " << duration <<
+  // std::endl;
 }
 
-void Song::setVolume(float volume)
-{
-  if (volume > 1.0f)
-  {
+void Song::setVolume(float volume) {
+  if (volume > 1.0f) {
     m_volume = 1.0f;
-  }
-  else if (volume < 0.0f)
-  {
+  } else if (volume < 0.0f) {
     m_volume = 0.0f;
-  }
-  else
-  {
+  } else {
     m_volume = volume;
   }
 }
 
-Song::~Song()
-{
+Song::~Song() {
   delete m_fname;
   drmp3_uninit(&m_song);
 }
