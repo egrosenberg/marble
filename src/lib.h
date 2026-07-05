@@ -1,9 +1,11 @@
 #ifndef LIB_H
 #define LIB_H
 
-#include <string>
 #include <cmath>
 #include <cstdint>
+#include <fstream>
+#include <string>
+#include <vector>
 
 #define PI 3.141592653589793238462643383279502884
 #define TARGET_SAMPLE_RATE 48000
@@ -12,16 +14,14 @@
 #define SECONDS_LEN 2
 #define MS_LEN 3
 
-inline std::string formatTime(float seconds)
-{
+inline std::string formatTime(float seconds) {
 
   std::string minutesStr = std::to_string((int)seconds / 60);
   std::string secondsStr = std::to_string((int)seconds % 60);
   secondsStr.insert(0, SECONDS_LEN - secondsStr.size(), '0');
   std::string msStr = std::to_string((int)(seconds * 1000) % 1000);
   int16_t toInsertMs = MS_LEN - msStr.size();
-  if (toInsertMs > 0)
-  {
+  if (toInsertMs > 0) {
     msStr.insert(0, MS_LEN - msStr.size(), '0');
   }
 
@@ -29,15 +29,38 @@ inline std::string formatTime(float seconds)
   return str;
 }
 
-inline float lineop(float x0, float x1, float y0, float y1, float x)
-{
+inline float lineop(float x0, float x1, float y0, float y1, float x) {
   return (y0 * (x1 - x) / (x1 - x0)) + (y1 * (x - x0) / (x1 - x0));
 }
 
 /// @brief normalized sinc
-inline float sinc(float x)
-{
-  return std::sin(x * PI) / (x * PI);
+inline float sinc(float x) { return std::sin(x * PI) / (x * PI); }
+
+/// @brief Reads all lines from a file and stores them in a new vector
+inline std::vector<std::string> *readPlaylist(const char *fname) {
+  std::vector<std::string> *res = new std::vector<std::string>();
+  std::ifstream *file = new std::ifstream();
+  file->open(fname);
+
+  if (!file->is_open()) {
+    printf("There was an error openeing the file %s", fname);
+    return res;
+  }
+
+  std::string buffer;
+  while (std::getline(*file, buffer)) {
+    if (buffer.size() > 2 &&
+        ((buffer.starts_with('"') && buffer.ends_with('"')) ||
+         (buffer.starts_with('\'') && buffer.ends_with('\'')))) {
+      buffer = buffer.substr(1, buffer.size() - 2);
+    }
+    res->push_back(buffer);
+  }
+
+  file->close();
+  delete file;
+
+  return res;
 }
 
 #endif

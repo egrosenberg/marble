@@ -25,7 +25,7 @@ private:
   void loadSong(uint16_t cursor);
 
 public:
-  Tracklist(const std::vector<std::string> &fnames, uint32_t sampleRate,
+  Tracklist(std::vector<std::string> *fnames, uint32_t sampleRate,
             uint16_t channels);
   virtual ~Tracklist();
 

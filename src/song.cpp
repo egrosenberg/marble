@@ -4,7 +4,6 @@
 #include <cstring>
 #include <iostream>
 
-
 #include "spline.h"
 #include <vector>
 
@@ -64,7 +63,7 @@ void Song::getFrames(float *pOutput, uint32_t frameCount) {
     std::vector<double> YR;
     for (uint16_t i = 0, j = 0; i < realSampleCount;) {
       // Don't count frames past end of track
-      if (i + getCurrentFrame() < m_frames) {
+      if (i + m_song.currentPCMFrame < m_frames) {
         X.push_back(j++);
         YL.push_back(realOutput[i++]);
         YR.push_back(realOutput[i++]);
@@ -76,9 +75,12 @@ void Song::getFrames(float *pOutput, uint32_t frameCount) {
     for (uint32_t i = 0; i < frameCount; ++i) {
       float sampleFrame = (float)i * ratio;
       // Don't process frames past end of track
-      if (std::ceil(sampleFrame) + getCurrentFrame() < m_frames) {
+      if ((std::ceil(sampleFrame) + m_song.currentPCMFrame) < m_frames) {
         pOutput[i * 2] = leftSpline(sampleFrame);
         pOutput[i * 2 + 1] = rightSpline(sampleFrame);
+      } else {
+        pOutput[i * 2] = 0;
+        pOutput[i * 2 + 1] = 0;
       }
     }
   }

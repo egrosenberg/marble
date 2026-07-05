@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <cstring>
 
+#define ENDED_TOLERANCE 2000
+
 class Song {
 private:
   char *m_fname;
@@ -28,7 +30,9 @@ public:
   uint64_t getCurrentFrame() { return m_song.currentPCMFrame; }
   // Get current time in seconds
   double getCurrentTime() { return m_song.currentPCMFrame * m_sampleDuration; }
-  bool isEnded() { return m_frames < m_song.currentPCMFrame; }
+  bool isEnded() {
+    return (m_frames - m_song.currentPCMFrame) < ENDED_TOLERANCE;
+  }
   char *getFileName() { return m_fname; };
 
   float getVolume() { return m_volume; }

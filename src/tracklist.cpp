@@ -2,16 +2,21 @@
 
 #include <iostream>
 
-Tracklist::Tracklist(const std::vector<std::string> &fnames,
-                     uint32_t sampleRate, uint16_t channels) {
+Tracklist::Tracklist(std::vector<std::string> *fnames, uint32_t sampleRate,
+                     uint16_t channels) {
   m_sampleRate = sampleRate;
   m_channels = channels;
   m_cursor = 0;
   m_mixCursor = -1;
   m_paused = true;
 
-  m_fnames = new std::vector<std::string>(fnames);
+  std::printf("copying file names\n");
+  m_fnames = new std::vector<std::string>(*fnames);
+  std::printf("Creating active songs vector\n");
   m_activeSongs = new std::vector<Song *>();
+
+  m_currentSong = nullptr;
+  m_mixedSong = nullptr;
 
   // Load first song
   loadSong(0);
@@ -23,6 +28,8 @@ void Tracklist::loadSong(uint16_t cursor) {
     return;
   }
 
+  std::printf("Loading song at %u\n", cursor);
+
   // Keep cursor within bounds
   cursor = cursor % m_fnames->size();
   if (cursor < 0) {
@@ -32,12 +39,12 @@ void Tracklist::loadSong(uint16_t cursor) {
   if (m_currentSong) {
     delete m_currentSong;
   }
-  if (m_mixCursor == cursor) {
-    m_currentSong = m_mixedSong;
-    m_mixedSong = nullptr;
-  } else {
-    m_currentSong = new Song(m_fnames->at(cursor).c_str(), m_sampleRate);
-  }
+  // if (m_mixCursor == cursor) {
+  //   m_currentSong = m_mixedSong;
+  //   m_mixedSong = nullptr;
+  // } else {
+  m_currentSong = new Song(m_fnames->at(cursor).c_str(), m_sampleRate);
+  // }
 }
 
 void Tracklist::getFrames(float *pOutput, uint32_t frameCount) {
@@ -54,7 +61,9 @@ void Tracklist::getFrames(float *pOutput, uint32_t frameCount) {
   m_currentSong->getFrames(pOutput, frameCount);
 
   // Check if song is ended
-  loadSong(++m_cursor);
+
+  if (m_currentSong->isEnded())
+    loadSong(++m_cursor);
 }
 
 Tracklist::~Tracklist() {
