@@ -2,7 +2,7 @@ all: bin/test
 
 .PHONY: all
 
-flags=-I lib -Wall
+flags=-I include -Wall
 
 build:
 	@echo "building directory $@"
