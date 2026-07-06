@@ -1,7 +1,9 @@
 #include "song.h"
 
+#include <chrono>
 #include <cmath>
 #include <cstring>
+#include <ctime>
 #include <iostream>
 #include <vector>
 
@@ -37,13 +39,18 @@ Song::Song(const char *fname, uint32_t targetSampleRate) {
   m_fadeInStart = 0;
   m_fadeInEnd = 0;
 
+  std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+  // std::time_t t_now = std::chrono::system_clock::to_time_t(now);
+  std::time_t t_end = std::chrono::system_clock::to_time_t(now + std::chrono::seconds((uint64_t)m_duration));
+
   std::cout << "Loaded file: " << fname;
   std::cout << "\n  channels: " << m_channels;
   std::cout << "\n  sampleRate: " << m_sampleRate;
-  std::cout << "\n  sampleDuration: " << m_sampleDuration;
+  // std::cout << "\n  sampleDuration: " << m_sampleDuration;
   std::cout << "\n  targetSampleRate: " << m_targetSampleRate;
   std::cout << "\n  frames: " << m_frames;
-  std::cout << "\n  duration: " << m_duration << std::endl;
+  std::cout << "\n  duration: " << m_duration;
+  std::cout << "\n  ends at: " << std::ctime(&t_end) << std::endl;
 }
 
 void Song::getFrames(float *pOutput, uint32_t frameCount) {

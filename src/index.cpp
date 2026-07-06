@@ -6,6 +6,7 @@
 #include "miniaudio.h"
 #include "tracklist.h"
 
+#include <cstdlib>
 #include <getopt.h>
 #include <iostream>
 
@@ -100,6 +101,12 @@ int main(int argc, char **argv) {
   tracklist->play();
   // Do something here. Probably your program's main loop.
   while (1) {
+    // system("pause");
+    // if (tracklist->isPaused()) {
+    //   tracklist->play();
+    // } else {
+    //   tracklist->pause();
+    // }
   }
 
   ma_device_uninit(&device);
