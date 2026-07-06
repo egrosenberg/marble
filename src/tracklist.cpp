@@ -14,16 +14,19 @@ Tracklist::Tracklist(const std::vector<std::string> &fnames, uint32_t sampleRate
   m_activeSongs = new std::vector<Song *>();
 
   // Hard coded for now
-  m_fadeDuration = sampleRate * 6;
-  m_fadeAt = -1;
+  m_fadeOutFrames = 0;
+  m_fadeInFrames = 0;
+  m_fadeInDelay = 0;
+  m_fadeInAt = -1;
+
+  m_fadingOut = false;
+  m_fadingIn = false;
 
   m_currentSong = nullptr;
   m_mixedSong = nullptr;
 
   // Load first song
   loadSong(0);
-
-  std::cout << "fadeDuration" << m_fadeDuration << std::endl;
 }
 
 void Tracklist::loadSong(uint16_t cursor) {
@@ -31,6 +34,8 @@ void Tracklist::loadSong(uint16_t cursor) {
     std::cerr << "No songs to load" << std::endl;
     return;
   }
+
+  m_fadingOut = false;
 
   std::printf("Loading song at %u\n", cursor);
 
@@ -66,15 +71,18 @@ void Tracklist::getFrames(float *pOutput, uint32_t frameCount) {
 
   uint64_t currentFrame = m_currentSong->getCurrentFrame();
 
-  // Check if song is ready to fade
-  if (m_fadeAt == -1 && (currentFrame + m_fadeDuration) > m_currentSong->getFrameCount()) {
+  // Check if song is ready to fade out
+  if (!m_fadingOut && m_fadeOutFrames && (currentFrame + m_fadeOutFrames) > m_currentSong->getFrameCount()) {
     std::cout << "Fading out at " << currentFrame << std::endl;
-    m_fadeAt = currentFrame + m_fadeDuration / 2;
+    m_fadingOut = true;
+    m_fadeInAt = currentFrame + m_fadeInDelay;
     m_currentSong->fadeOutNow();
   }
-  if (currentFrame > m_fadeAt && !m_mixedSong) {
+  if (m_fadeInAt != -1 && currentFrame > m_fadeInAt && !m_fadingIn && !m_mixedSong) {
+    m_fadingIn = true;
     m_mixCursor = (m_cursor + 1) % m_fnames->size();
     m_mixedSong = new Song(m_fnames->at(m_mixCursor).c_str(), m_sampleRate);
+    m_mixedSong->setFadeInFrames(0, m_fadeInFrames);
   }
   if (m_mixedSong) {
     float *mixFrames = (float *)malloc(sizeof(float) * frameCount * m_channels);
@@ -89,10 +97,11 @@ void Tracklist::getFrames(float *pOutput, uint32_t frameCount) {
 
   // Check if song is ended
   if (m_currentSong->isEnded()) {
+    m_fadingOut = false;
     if (!m_mixedSong) {
       loadSong(++m_cursor);
     } else {
-      m_fadeAt = -1;
+      m_fadeInAt = -1;
       delete m_currentSong;
       m_currentSong = m_mixedSong;
       m_mixedSong = nullptr;
@@ -100,6 +109,35 @@ void Tracklist::getFrames(float *pOutput, uint32_t frameCount) {
     }
   }
 }
+
+/// @brief Equal crossfade
+/// @param duration: duration of fade in seconds
+void Tracklist::setCrossfade(double duration) {
+  uint64_t frames = duration * m_sampleRate;
+
+  m_fadeOutFrames = frames;
+  m_fadeInFrames = frames;
+  m_fadeInDelay = 0;
+}
+
+/// @brief Fade out, cut in halfway through fade out
+/// @param duration: duration of fade out
+void Tracklist::setCutFade(double duration) {
+  uint64_t frames = duration * m_sampleRate;
+
+  m_fadeOutFrames = frames;
+  m_fadeInFrames = frames * 0.5f;
+  m_fadeInDelay = m_fadeInFrames;
+}
+
+/// @brief Set fade out duration in seconds
+void Tracklist::setFadeOutduration(double duration) { m_fadeOutFrames = m_sampleRate * duration; }
+
+/// @brief Set fade in delay in seconds (0 for crossfade)
+void Tracklist::setFadeInDelay(double duration) { m_fadeInDelay = m_sampleRate * duration; }
+
+/// @brief set fade in duration in seconds
+void Tracklist::setFadeInDuration(double duration) { m_fadeInFrames = m_sampleRate * duration; }
 
 Tracklist::~Tracklist() {
   delete m_fnames;

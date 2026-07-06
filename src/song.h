@@ -48,6 +48,8 @@ public:
 
   void setFadeIn(double start, double duration);
   void setFadeOut(double end, double duration);
+  void setFadeInFrames(uint64_t start, uint64_t duration);
+  void setFadeOutFrames(uint64_t end, uint64_t duration);
   void fadeOutNow();
   void removeFadeIn();
   void removeFadeOut();

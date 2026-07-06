@@ -74,6 +74,7 @@ int main(int argc, char **argv) {
   }
 
   tracklist = new Tracklist(*playlist, sampleRate, 2);
+  tracklist->setCutFade(6.0);
 
   delete playlist;
 

@@ -165,9 +165,15 @@ void Song::setFadeIn(double start, double duration) {
   m_hasFadeIn = true;
   m_fadeInStart = start * m_targetSampleRate;
   m_fadeInEnd = m_fadeInStart + (duration * m_targetSampleRate);
+}
 
-  std::cout << "Fade in start: " << m_fadeInStart;
-  std::cout << "\nFade in end: " << m_fadeInEnd;
+/// @brief Set fade in
+/// @param start:     start time of fade (in seconds)
+/// @param duration:  duration of fade (in seconds)
+void Song::setFadeInFrames(uint64_t start, uint64_t duration) {
+  m_hasFadeIn = true;
+  m_fadeInStart = start;
+  m_fadeInEnd = std::min(m_fadeInStart + duration, m_frames);
 }
 
 /// @brief Set fade out
@@ -178,6 +184,16 @@ void Song::setFadeOut(double end, double duration) {
   m_fadeOutEnd = end * m_targetSampleRate;
   m_fadeOutStart = std::max(0.0, m_fadeOutEnd - (m_targetSampleRate * duration));
 }
+
+/// @brief Set fade out
+/// @param end:       end time of fade out (PCM frames)
+/// @param duration:  duration of fade out (PCM frames)
+void Song::setFadeOutFrames(uint64_t end, uint64_t duration) {
+  m_hasFadeOut = true;
+  m_fadeOutEnd = std::min(m_frames, end);
+  m_fadeOutStart = std::max(0llu, m_fadeOutEnd - duration);
+}
+
 void Song::fadeOutNow() {
   m_hasFadeOut = true;
   m_fadeOutEnd = m_frames;
