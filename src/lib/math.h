@@ -77,18 +77,12 @@ inline float approx_cos(float x) {
 /// END REFERENCE
 
 /// @brief sine squared (approximated for speed)
-inline float approx_sin2(float x) {
-  return (1.0f - approx_cos(2.0f * x)) * 0.5f;
-}
+inline float approx_sin2(float x) { return (1.0f - approx_cos(2.0f * x)) * 0.5f; }
 
 /// @brief cosine squared (approximated for speed)
-inline float approx_cos2(float x) {
-  return (1.0f + approx_cos(2.0f * x)) * 0.5f;
-}
+inline float approx_cos2(float x) { return (1.0f + approx_cos(2.0f * x)) * 0.5f; }
 /// @brief tangent squared (approximated for speed)
-inline float approx_tan2(float x) {
-  return (1.0f - approx_cos(2.0f * x)) / (1.0f + approx_cos(2.0f * x));
-}
+inline float approx_tan2(float x) { return (1.0f - approx_cos(2.0f * x)) / (1.0f + approx_cos(2.0f * x)); }
 
 /// @brief sine squared
 inline float sin2(float x) { return (1.0f - std::cos(2.0f * x)) * 0.5f; }
@@ -97,8 +91,6 @@ inline float sin2(float x) { return (1.0f - std::cos(2.0f * x)) * 0.5f; }
 inline float cos2(float x) { return (1.0f + std::cos(2.0f * x)) * 0.5f; }
 
 /// @brief tangent squared
-inline float tan2(float x) {
-  return (1.0f - std::cos(2.0f * x)) / (1.0f + approx_cos(2.0f * x));
-}
+inline float tan2(float x) { return (1.0f - std::cos(2.0f * x)) / (1.0f + approx_cos(2.0f * x)); }
 
 #endif

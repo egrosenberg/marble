@@ -39,9 +39,7 @@ public:
 
   uint64_t getCurrentFrame() { return m_song.currentPCMFrame; }
   double getCurrentTime() { return m_song.currentPCMFrame * m_sampleDuration; }
-  bool isEnded() {
-    return (m_frames - m_song.currentPCMFrame) < ENDED_TOLERANCE;
-  }
+  bool isEnded() { return (m_frames - m_song.currentPCMFrame) < ENDED_TOLERANCE; }
   char *getFileName() { return m_fname; };
   uint64_t getFrameCount() { return m_frames; }
 

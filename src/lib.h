@@ -41,8 +41,7 @@ inline std::vector<std::string> *readPlaylist(const char *fname) {
   std::string buffer;
   while (std::getline(*file, buffer)) {
     if (buffer.size() > 2 &&
-        ((buffer.starts_with('"') && buffer.ends_with('"')) ||
-         (buffer.starts_with('\'') && buffer.ends_with('\'')))) {
+        ((buffer.starts_with('"') && buffer.ends_with('"')) || (buffer.starts_with('\'') && buffer.ends_with('\'')))) {
       buffer = buffer.substr(1, buffer.size() - 2);
     }
     res->push_back(buffer);

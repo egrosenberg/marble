@@ -3,8 +3,7 @@
 
 #include <iostream>
 
-Tracklist::Tracklist(const std::vector<std::string> &fnames,
-                     uint32_t sampleRate, uint16_t channels) {
+Tracklist::Tracklist(const std::vector<std::string> &fnames, uint32_t sampleRate, uint16_t channels) {
   m_sampleRate = sampleRate;
   m_channels = channels;
   m_cursor = 0;
@@ -68,8 +67,7 @@ void Tracklist::getFrames(float *pOutput, uint32_t frameCount) {
   uint64_t currentFrame = m_currentSong->getCurrentFrame();
 
   // Check if song is ready to fade
-  if (m_fadeAt == -1 &&
-      (currentFrame + m_fadeDuration) > m_currentSong->getFrameCount()) {
+  if (m_fadeAt == -1 && (currentFrame + m_fadeDuration) > m_currentSong->getFrameCount()) {
     std::cout << "Fading out at " << currentFrame << std::endl;
     m_fadeAt = currentFrame + m_fadeDuration / 2;
     m_currentSong->fadeOutNow();

@@ -1,6 +1,7 @@
 ## Prerequisites
 - Make
 - MinGW
+- clang-format (using LLVM on windows)
 
 ## Recomended
 - Clangd

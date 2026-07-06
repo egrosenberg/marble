@@ -113,8 +113,7 @@ void Song::getFrames(float *pOutput, uint32_t frameCount) {
       uint32_t l = i * 2;
       uint32_t r = i * 2 + 1;
 
-      float x = HALF_PI * (((float)frame - m_fadeInStart) /
-                           (m_fadeInEnd - m_fadeInStart));
+      float x = HALF_PI * (((float)frame - m_fadeInStart) / (m_fadeInEnd - m_fadeInStart));
       float value = approx_sin2(x);
 
       pOutput[i * 2] *= value;
@@ -129,8 +128,7 @@ void Song::getFrames(float *pOutput, uint32_t frameCount) {
       uint32_t l = i * 2;
       uint32_t r = i * 2 + 1;
 
-      float value = approx_cos2(HALF_PI * ((float)(frame - m_fadeOutStart) /
-                                           (m_fadeOutEnd - m_fadeOutStart)));
+      float value = approx_cos2(HALF_PI * ((float)(frame - m_fadeOutStart) / (m_fadeOutEnd - m_fadeOutStart)));
 
       pOutput[l] *= value;
       pOutput[r] *= value;
@@ -178,8 +176,7 @@ void Song::setFadeIn(double start, double duration) {
 void Song::setFadeOut(double end, double duration) {
   m_hasFadeOut = true;
   m_fadeOutEnd = end * m_targetSampleRate;
-  m_fadeOutStart =
-      std::max(0.0, m_fadeOutEnd - (m_targetSampleRate * duration));
+  m_fadeOutStart = std::max(0.0, m_fadeOutEnd - (m_targetSampleRate * duration));
 }
 void Song::fadeOutNow() {
   m_hasFadeOut = true;

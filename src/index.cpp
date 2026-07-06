@@ -19,8 +19,7 @@ Tracklist *tracklist;
 uint32_t x = 0;
 const double pi = std::acos(-1); // or std::numbers::pi since C++20
 
-void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
-                   ma_uint32 frameCount) {
+void data_callback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount) {
   // song->getFrames((float *)pOutput, frameCount);
   tracklist->getFrames((float *)pOutput, frameCount);
 }
@@ -37,11 +36,10 @@ int main(int argc, char **argv) {
   int c = 0;
   int this_option_optind = optind ? optind : 1;
   int option_index = 0;
-  static struct option long_options[] = {
-      {"sample-rate", required_argument, 0, 0},
-      {"list", required_argument, 0, 0},
-      {"song", required_argument, 0, 0},
-      {0, 0, 0, 0}};
+  static struct option long_options[] = {{"sample-rate", required_argument, 0, 0},
+                                         {"list", required_argument, 0, 0},
+                                         {"song", required_argument, 0, 0},
+                                         {0, 0, 0, 0}};
 
   uint32_t sampleRate = TARGET_SAMPLE_RATE;
 
@@ -82,14 +80,11 @@ int main(int argc, char **argv) {
   ma_device_config config = ma_device_config_init(ma_device_type_playback);
   config.playback.format = ma_format_f32; // Set to ma_format_unknown to use the
                                           // device's native format.
-  config.playback.channels =
-      2; // Set to 0 to use the device's native channel count.
-  config.sampleRate =
-      sampleRate; // Set to 0 to use the device's native sample rate.
-  config.dataCallback = data_callback; // This function will be called when
-                                       // miniaudio needs more data.
-  config.pUserData =
-      NULL; // Can be accessed from the device object (device.pUserData).
+  config.playback.channels = 2;           // Set to 0 to use the device's native channel count.
+  config.sampleRate = sampleRate;         // Set to 0 to use the device's native sample rate.
+  config.dataCallback = data_callback;    // This function will be called when
+                                          // miniaudio needs more data.
+  config.pUserData = NULL;                // Can be accessed from the device object (device.pUserData).
 
   ma_device device;
   if (ma_device_init(NULL, &config, &device) != MA_SUCCESS) {
