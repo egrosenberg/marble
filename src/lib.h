@@ -1,13 +1,11 @@
 #ifndef LIB_H
 #define LIB_H
 
-#include <cmath>
 #include <cstdint>
 #include <fstream>
 #include <string>
 #include <vector>
 
-#define PI 3.141592653589793238462643383279502884
 #define TARGET_SAMPLE_RATE 48000
 
 #define MINUTES_LEN 2
@@ -28,13 +26,6 @@ inline std::string formatTime(float seconds) {
   std::string str = minutesStr + ":" + secondsStr + "." + msStr;
   return str;
 }
-
-inline float lineop(float x0, float x1, float y0, float y1, float x) {
-  return (y0 * (x1 - x) / (x1 - x0)) + (y1 * (x - x0) / (x1 - x0));
-}
-
-/// @brief normalized sinc
-inline float sinc(float x) { return std::sin(x * PI) / (x * PI); }
 
 /// @brief Reads all lines from a file and stores them in a new vector
 inline std::vector<std::string> *readPlaylist(const char *fname) {

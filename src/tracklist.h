@@ -17,15 +17,17 @@ private:
   uint32_t m_sampleRate; // Sample rate to play songs at
   uint16_t m_channels;   // Number of channels to output
   uint16_t m_cursor;     // Index of current song in list
-  uint16_t m_mixCursor;  // Index of mixed song
+  int32_t m_mixCursor;   // Index of mixed song
   Song *m_currentSong;   // Pointer to song object of current song
   Song *m_mixedSong;     // Pointer to song object of secondary song (for fades)
   bool m_paused;         // Is tracklist paused?
+  uint32_t m_fadeDuration; // Duration of crossfade
+  int64_t m_fadeAt;        // Frame to start crossfade (-1 if never)
 
   void loadSong(uint16_t cursor);
 
 public:
-  Tracklist(std::vector<std::string> *fnames, uint32_t sampleRate,
+  Tracklist(const std::vector<std::string> &fnames, uint32_t sampleRate,
             uint16_t channels);
   virtual ~Tracklist();
 

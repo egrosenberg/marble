@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
     playlist = new std::vector<std::string>({songPath});
   }
 
-  tracklist = new Tracklist(playlist, sampleRate, 2);
+  tracklist = new Tracklist(*playlist, sampleRate, 2);
 
   delete playlist;
 

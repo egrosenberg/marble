@@ -20,7 +20,7 @@ build/song.o: src/song.cpp src/song.h src/lib.h | build
 	@echo building $@
 	g++ $(flags) -o $@ -c $<
 
-build/tracklist.o: src/tracklist.cpp src/tracklist.h src/lib.h | build
+build/tracklist.o: src/tracklist.cpp src/tracklist.h src/lib.h src/lib/math.h | build
 	@echo building $@
 	g++ $(flags) -o $@ -c $<
 
