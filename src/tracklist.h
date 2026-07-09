@@ -43,6 +43,7 @@ public:
 
   void play() { m_paused = false; }
   void pause() { m_paused = true; }
+  void playPause() { m_paused = !m_paused; }
 
   void setCrossfade(double duration); // Equal cross fade
   void setCutFade(double duration);   // Fade out, cut in halfway through fade out

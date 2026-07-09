@@ -1,7 +1,12 @@
 
+// #define CPPHTTPLIB_OPENSSL_SUPPORT
+#include "httplib.h"
+
+#include <string>
 #define DR_MP3_IMPLEMENTATION
 #define MINIAUDIO_IMPLEMENTATION
 
+#include "api/api.h"
 #include "lib.h"
 #include "miniaudio.h"
 #include "tracklist.h"
@@ -100,6 +105,24 @@ int main(int argc, char **argv) {
   // Set tracklist to playing
   tracklist->play();
   // Do something here. Probably your program's main loop.
+
+  httplib::Server svr;
+  // svr.Get("/", [](const httplib::Request &req, httplib::Response &res) {
+  //   // req.get_header_value(const std::string &key)
+  //   std::string routeName = req.get_param_value("name");
+  //   if (!routeName.length()) {
+  //     printf("No api route name provided");
+  //     res.set_content("No name provided", "text/plain");
+  //     res.status = 400;
+  //     return;
+  //   }
+  //   res.set_content("Hello" + routeName + "!", "text/plain");
+  // });
+
+  api::bindRoutes(svr, {tracklist});
+
+  svr.listen("localhost", 1234);
+
   while (1) {
     // system("pause");
     // if (tracklist->isPaused()) {
