@@ -28,7 +28,8 @@ private:
   bool m_fadingIn;          // Is song actively fading in
   int64_t m_fadeInAt;       // Frame to start fade in (-1 = not scheduled)
 
-  void loadSong(uint16_t cursor);
+  void loadSong(int32_t cursor);
+  void mixSong(int32_t cursor);
 
 public:
   Tracklist(const std::vector<std::string> &fnames, uint32_t sampleRate, uint16_t channels);
@@ -44,6 +45,10 @@ public:
   void play() { m_paused = false; }
   void pause() { m_paused = true; }
   void playPause() { m_paused = !m_paused; }
+
+  void skip(bool fade = true);
+  void unskip(bool fade = true);
+  void restart();
 
   void setCrossfade(double duration); // Equal cross fade
   void setCutFade(double duration);   // Fade out, cut in halfway through fade out

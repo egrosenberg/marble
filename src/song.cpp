@@ -117,6 +117,7 @@ void Song::getFrames(float *pOutput, uint32_t frameCount) {
       uint32_t frame = i + startFrame;
       if (frame > m_fadeInEnd)
         break;
+
       uint32_t l = i * 2;
       uint32_t r = i * 2 + 1;
 
@@ -130,8 +131,11 @@ void Song::getFrames(float *pOutput, uint32_t frameCount) {
   if (m_hasFadeOut) {
     for (uint32_t i = 0; i < frameCount; ++i) {
       uint32_t frame = i + startFrame;
-      if (frame > m_fadeOutEnd)
-        break;
+      if (frame > m_fadeOutEnd) {
+        pOutput[i * 2] = 0;
+        pOutput[i * 2 + 1] = 0;
+        continue;
+      }
       uint32_t l = i * 2;
       uint32_t r = i * 2 + 1;
 
@@ -164,6 +168,8 @@ void Song::setVolume(float volume) {
     m_volume = volume;
   }
 }
+
+void Song::seekFrame(uint64_t frame) { drmp3_seek_to_pcm_frame(&m_song, frame); }
 
 /// @brief Set fade in
 /// @param start:     start time of fade (in seconds)
@@ -201,9 +207,11 @@ void Song::setFadeOutFrames(uint64_t end, uint64_t duration) {
   m_fadeOutStart = std::max(0llu, m_fadeOutEnd - duration);
 }
 
-void Song::fadeOutNow() {
+/// @brief fades out song immediately
+/// @param duration: optional duration in frames to fade out over (default is to fade until end of song)
+void Song::fadeOutNow(int64_t duration) {
   m_hasFadeOut = true;
-  m_fadeOutEnd = m_frames;
+  m_fadeOutEnd = duration < 0 ? m_frames : m_song.currentPCMFrame + duration;
   m_fadeOutStart = m_song.currentPCMFrame;
 }
 /// @brief remove fade in

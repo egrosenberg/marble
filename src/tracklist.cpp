@@ -29,7 +29,7 @@ Tracklist::Tracklist(const std::vector<std::string> &fnames, uint32_t sampleRate
   loadSong(0);
 }
 
-void Tracklist::loadSong(uint16_t cursor) {
+void Tracklist::loadSong(int32_t cursor) {
   if (!m_fnames->size()) {
     std::cerr << "No songs to load" << std::endl;
     return;
@@ -51,9 +51,50 @@ void Tracklist::loadSong(uint16_t cursor) {
   if (m_mixCursor == cursor) {
     m_currentSong = m_mixedSong;
     m_mixedSong = nullptr;
+    m_mixCursor = -1;
   } else {
     m_currentSong = new Song(m_fnames->at(cursor).c_str(), m_sampleRate);
   }
+}
+
+void Tracklist::mixSong(int32_t cursor) {
+  // If no fade out, just cut
+  // Note: this technically ignores fade in w/ no fade out
+  // but I don't believe that to be a meaningful use case right now
+  if (!m_fadeOutFrames) {
+    loadSong(cursor);
+  }
+
+  if (!m_fnames->size()) {
+    std::cerr << "No songs to load" << std::endl;
+    return;
+  }
+
+  // Keep cursor within bounds
+  cursor = cursor % m_fnames->size();
+  if (cursor < 0) {
+    cursor += m_fnames->size();
+  }
+
+  if (m_mixCursor == cursor) {
+    return;
+  }
+
+  m_mixCursor = cursor;
+
+  if (!m_currentSong) {
+    m_currentSong = new Song(m_fnames->at(cursor).c_str(), m_sampleRate);
+    return;
+  }
+
+  if (m_fadingOut) {
+    throw "Cannot mix while actively transitioning";
+  }
+
+  uint64_t currentFrame = m_currentSong->getCurrentFrame();
+  m_fadingOut = true;
+  m_fadeInAt = currentFrame + m_fadeInDelay;
+  m_currentSong->fadeOutNow(m_fadeOutFrames);
 }
 
 void Tracklist::getFrames(float *pOutput, uint32_t frameCount) {
@@ -73,12 +114,9 @@ void Tracklist::getFrames(float *pOutput, uint32_t frameCount) {
 
   // Check if song is ready to fade out
   if (!m_fadingOut && m_fadeOutFrames && (currentFrame + m_fadeOutFrames) > m_currentSong->getFrameCount()) {
-    std::cout << "Fading out at " << currentFrame << std::endl;
-    m_fadingOut = true;
-    m_fadeInAt = currentFrame + m_fadeInDelay;
-    m_currentSong->fadeOutNow();
+    mixSong(m_cursor++);
   }
-  if (m_fadeInAt != -1 && currentFrame > m_fadeInAt && !m_fadingIn && !m_mixedSong) {
+  if (currentFrame >= m_fadeInAt && !m_fadingIn && !m_mixedSong) {
     m_fadingIn = true;
     m_mixCursor = (m_cursor + 1) % m_fnames->size();
     m_mixedSong = new Song(m_fnames->at(m_mixCursor).c_str(), m_sampleRate);
@@ -94,6 +132,12 @@ void Tracklist::getFrames(float *pOutput, uint32_t frameCount) {
 
     free(mixFrames);
   }
+  // if (m_fadingIn && currentFrame > m_fadeInFrames) {
+  //   m_fadingIn = false;
+  //   if (m_mixedSong && m_currentSong) {
+  //     loadSong(m_mixCursor);
+  //   }
+  // }
 
   // Check if song is ended
   if (m_currentSong->isEnded()) {
@@ -108,6 +152,33 @@ void Tracklist::getFrames(float *pOutput, uint32_t frameCount) {
       m_mixCursor = -1;
     }
   }
+}
+
+void Tracklist::skip(bool fade) {
+  if (m_currentSong && m_mixedSong) {
+    throw "Cannot skip while transitioning";
+  }
+  if (fade) {
+    mixSong(m_cursor++);
+  } else {
+    loadSong(m_cursor++);
+  }
+}
+
+void Tracklist::unskip(bool fade) {
+  if (m_currentSong && m_mixedSong) {
+    throw "Cannot skip while transitioning";
+  }
+  if (fade) {
+    mixSong(m_cursor--);
+  } else {
+    loadSong(m_cursor--);
+  }
+}
+
+void Tracklist::restart() {
+  delete m_mixedSong;
+  m_currentSong->seekFrame(0);
 }
 
 /// @brief Equal crossfade

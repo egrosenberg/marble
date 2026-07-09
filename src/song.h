@@ -39,18 +39,23 @@ public:
 
   uint64_t getCurrentFrame() { return m_song.currentPCMFrame; }
   double getCurrentTime() { return m_song.currentPCMFrame * m_sampleDuration; }
-  bool isEnded() { return (m_frames - m_song.currentPCMFrame) < ENDED_TOLERANCE; }
+  bool isEnded() {
+    return (m_frames - m_song.currentPCMFrame) < ENDED_TOLERANCE ||
+           (m_hasFadeOut > 0 && m_song.currentPCMFrame > m_fadeOutEnd);
+  }
   char *getFileName() { return m_fname; };
   uint64_t getFrameCount() { return m_frames; }
 
   float getVolume() { return m_volume; }
   void setVolume(float volume);
 
+  void seekFrame(uint64_t frame);
+
   void setFadeIn(double start, double duration);
   void setFadeOut(double end, double duration);
   void setFadeInFrames(uint64_t start, uint64_t duration);
   void setFadeOutFrames(uint64_t end, uint64_t duration);
-  void fadeOutNow();
+  void fadeOutNow(int64_t = -1);
   void removeFadeIn();
   void removeFadeOut();
 

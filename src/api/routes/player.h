@@ -5,8 +5,13 @@
 
 namespace api::player {
 
-void playPause(const httplib::Request &, httplib::Response &, const api::context &);
-inline api::fn_map postMap = {{"play-pause", &playPause}};
+void playPause(API_FN_ARGS);
+void skip(API_FN_ARGS);
+void unskip(API_FN_ARGS);
+void restart(API_FN_ARGS);
+
+inline const api::fn_map postMap = {
+    {"play-pause", &playPause}, {"unskip", &unskip}, {"skip", &skip}, {"restart", &restart}};
 
 inline void POST(const httplib::Request &req, httplib::Response &res, const api::context &ctx) {
   const api::fn_map fnMap = {{"play-pause", &playPause}};

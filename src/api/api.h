@@ -5,6 +5,7 @@
 #include "httplib.h"
 #include <map>
 
+#define API_FN_ARGS const httplib::Request &, httplib::Response &, const context &
 
 namespace api {
 
@@ -13,12 +14,12 @@ typedef struct context {
 } context;
 
 // Typedef for api functions
-typedef void (*api_fn)(const httplib::Request &, httplib::Response &, const context &);
+typedef void (*api_fn)(API_FN_ARGS);
 // Map of api functions
 typedef std::map<std::string, api_fn> fn_map;
 
 // handle-request wrapper function
-typedef void (*request_handler)(const httplib::Request &, httplib::Response &, const context &);
+typedef void (*request_handler)(API_FN_ARGS);
 
 // Registry for a specific route
 typedef struct route_handlers {
