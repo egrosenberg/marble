@@ -9,6 +9,7 @@ Tracklist::Tracklist(const std::vector<std::string> &fnames, uint32_t sampleRate
   m_cursor = 0;
   m_mixCursor = -1;
   m_paused = true;
+  m_volume = 1.0f;
 
   m_fnames = new std::vector<std::string>(fnames);
   m_activeSongs = new std::vector<Song *>();
@@ -55,9 +56,14 @@ void Tracklist::loadSong(int32_t cursor) {
   } else {
     m_currentSong = new Song(m_fnames->at(cursor).c_str(), m_sampleRate);
   }
+
+  m_cursor = cursor;
+  m_mixCursor = -1;
 }
 
 void Tracklist::mixSong(int32_t cursor) {
+  std::cout << "Mixing to " << cursor << std::endl;
+
   // If no fade out, just cut
   // Note: this technically ignores fade in w/ no fade out
   // but I don't believe that to be a meaningful use case right now
@@ -80,8 +86,6 @@ void Tracklist::mixSong(int32_t cursor) {
     return;
   }
 
-  m_mixCursor = cursor;
-
   if (!m_currentSong) {
     m_currentSong = new Song(m_fnames->at(cursor).c_str(), m_sampleRate);
     return;
@@ -91,8 +95,10 @@ void Tracklist::mixSong(int32_t cursor) {
     throw "Cannot mix while actively transitioning";
   }
 
+  m_mixCursor = cursor;
   uint64_t currentFrame = m_currentSong->getCurrentFrame();
   m_fadingOut = true;
+  m_fadingIn = false;
   m_fadeInAt = currentFrame + m_fadeInDelay;
   m_currentSong->fadeOutNow(m_fadeOutFrames);
 }
@@ -105,7 +111,7 @@ void Tracklist::getFrames(float *pOutput, uint32_t frameCount) {
   }
   // Ensure we have a song if we are playing
   if (!m_currentSong) {
-    loadSong(m_cursor);
+    loadSong(m_mixCursor == -1 ? m_cursor : m_mixCursor);
   }
   // get output frames from song
   m_currentSong->getFrames(pOutput, frameCount);
@@ -114,11 +120,11 @@ void Tracklist::getFrames(float *pOutput, uint32_t frameCount) {
 
   // Check if song is ready to fade out
   if (!m_fadingOut && m_fadeOutFrames && (currentFrame + m_fadeOutFrames) > m_currentSong->getFrameCount()) {
-    mixSong(m_cursor++);
+    mixSong(m_cursor + 1);
   }
   if (currentFrame >= m_fadeInAt && !m_fadingIn && !m_mixedSong) {
     m_fadingIn = true;
-    m_mixCursor = (m_cursor + 1) % m_fnames->size();
+    m_mixCursor = m_mixCursor == -1 ? (m_cursor + 1) % m_fnames->size() : m_mixCursor;
     m_mixedSong = new Song(m_fnames->at(m_mixCursor).c_str(), m_sampleRate);
     m_mixedSong->setFadeInFrames(0, m_fadeInFrames);
   }
@@ -132,22 +138,31 @@ void Tracklist::getFrames(float *pOutput, uint32_t frameCount) {
 
     free(mixFrames);
   }
-  // if (m_fadingIn && currentFrame > m_fadeInFrames) {
-  //   m_fadingIn = false;
-  //   if (m_mixedSong && m_currentSong) {
-  //     loadSong(m_mixCursor);
-  //   }
-  // }
+
+  if (m_fadingIn && m_mixedSong && m_mixedSong->getCurrentFrame() > m_fadeInFrames) {
+    m_fadingIn = false;
+  }
+
+  if (m_volume != 1.0f) {
+    for (uint32_t i = 0; i < frameCount * m_channels; ++i) {
+      pOutput[i] *= m_volume;
+    }
+  }
 
   // Check if song is ended
   if (m_currentSong->isEnded()) {
     m_fadingOut = false;
     if (!m_mixedSong) {
-      loadSong(++m_cursor);
+      if (m_mixCursor != -1) {
+        loadSong(m_mixCursor);
+      } else {
+        loadSong(m_cursor + 1);
+      }
     } else {
       m_fadeInAt = -1;
       delete m_currentSong;
       m_currentSong = m_mixedSong;
+      m_cursor = m_mixCursor;
       m_mixedSong = nullptr;
       m_mixCursor = -1;
     }
@@ -159,9 +174,9 @@ void Tracklist::skip(bool fade) {
     throw "Cannot skip while transitioning";
   }
   if (fade) {
-    mixSong(m_cursor++);
+    mixSong(m_cursor + 1);
   } else {
-    loadSong(m_cursor++);
+    loadSong(m_cursor + 1);
   }
 }
 
@@ -170,9 +185,9 @@ void Tracklist::unskip(bool fade) {
     throw "Cannot skip while transitioning";
   }
   if (fade) {
-    mixSong(m_cursor--);
+    mixSong(m_cursor - 1);
   } else {
-    loadSong(m_cursor--);
+    loadSong(m_cursor - 1);
   }
 }
 
@@ -197,8 +212,8 @@ void Tracklist::setCutFade(double duration) {
   uint64_t frames = duration * m_sampleRate;
 
   m_fadeOutFrames = frames;
-  m_fadeInFrames = frames * 0.5f;
-  m_fadeInDelay = m_fadeInFrames;
+  m_fadeInFrames = frames;
+  m_fadeInDelay = frames * 0.5f;
 }
 
 /// @brief Set fade out duration in seconds

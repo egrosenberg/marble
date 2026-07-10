@@ -3,6 +3,7 @@
 #include "httplib.h"
 
 #include "routes/player.h"
+#include <sstream>
 
 const std::vector<std::pair<const char *, api::route_handlers>> routes = {{"/player", api::handlers::player}};
 
@@ -35,12 +36,18 @@ void api::handleRequest(const httplib::Request &req, httplib::Response &res, con
   }
 
   try {
+    res.set_header("Access-Control-Allow-Origin", "*");
+
+    nlohmann::json options = api::getOpts(req);
+    nlohmann::json data;
+
     // find api function (if exists)
     api::fn_map::const_iterator function = fnMap.find(routeName);
 
     if (function != fnMap.end()) {
       // run api function
-      (function->second)(req, res, ctx);
+      (function->second)(options, data, ctx);
+      res.set_content(data.dump(2).c_str(), "application/json");
     } else {
       res.status = 404;
       res.set_content("Unable to find route " + routeName, "text/plain");
@@ -49,4 +56,8 @@ void api::handleRequest(const httplib::Request &req, httplib::Response &res, con
     res.status = 400;
     res.set_content(msg, "text/plain");
   }
+}
+
+nlohmann::json api::getOpts(const httplib::Request &req) {
+  return nlohmann::json::parse(std::stringstream(req.body.length() ? req.body : "{}"));
 }

@@ -3,9 +3,10 @@
 
 #include "../tracklist.h"
 #include "httplib.h"
+#include "json.hpp"
 #include <map>
 
-#define API_FN_ARGS const httplib::Request &, httplib::Response &, const context &
+#define API_FN_ARGS const nlohmann::json &, nlohmann::json &, const api::context &
 
 namespace api {
 
@@ -19,7 +20,7 @@ typedef void (*api_fn)(API_FN_ARGS);
 typedef std::map<std::string, api_fn> fn_map;
 
 // handle-request wrapper function
-typedef void (*request_handler)(API_FN_ARGS);
+typedef void (*request_handler)(const httplib::Request &, httplib::Response &, const context &);
 
 // Registry for a specific route
 typedef struct route_handlers {
@@ -34,6 +35,8 @@ void handleRequest(const httplib::Request &req, httplib::Response &res, const co
 namespace handlers {}
 
 void bindRoutes(httplib::Server &svr, const context &);
+
+nlohmann::json getOpts(const httplib::Request &);
 
 } // namespace api
 
