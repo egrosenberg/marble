@@ -28,6 +28,7 @@ private:
   bool m_fadingIn;          // Is song actively fading in
   int64_t m_fadeInAt;       // Frame to start fade in (-1 = not scheduled)
   float m_volume;           // Volume scalar (0.0 - 1.0)
+  float m_adjustedVolume;   // Volume scalar, adjusted for hearing
 
   void loadSong(int32_t cursor);
   void mixSong(int32_t cursor);
@@ -51,7 +52,7 @@ public:
   void unskip(bool fade = true);
   void restart();
 
-  float setVolume(float volume) { return m_volume = volume; }
+  float setVolume(float volume);
 
   void setCrossfade(double duration); // Equal cross fade
   void setCutFade(double duration);   // Fade out, cut in halfway through fade out

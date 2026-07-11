@@ -1,6 +1,7 @@
 #include "tracklist.h"
 #include "song.h"
 
+#include <cmath>
 #include <iostream>
 
 Tracklist::Tracklist(const std::vector<std::string> &fnames, uint32_t sampleRate, uint16_t channels) {
@@ -10,6 +11,7 @@ Tracklist::Tracklist(const std::vector<std::string> &fnames, uint32_t sampleRate
   m_mixCursor = -1;
   m_paused = true;
   m_volume = 1.0f;
+  m_adjustedVolume = 1.0f;
 
   m_fnames = new std::vector<std::string>(fnames);
   m_activeSongs = new std::vector<Song *>();
@@ -143,9 +145,9 @@ void Tracklist::getFrames(float *pOutput, uint32_t frameCount) {
     m_fadingIn = false;
   }
 
-  if (m_volume != 1.0f) {
+  if (m_adjustedVolume != 1.0f) {
     for (uint32_t i = 0; i < frameCount * m_channels; ++i) {
-      pOutput[i] *= m_volume;
+      pOutput[i] *= m_adjustedVolume;
     }
   }
 
@@ -194,6 +196,16 @@ void Tracklist::unskip(bool fade) {
 void Tracklist::restart() {
   delete m_mixedSong;
   m_currentSong->seekFrame(0);
+}
+
+constexpr const float maxVolume = 1.0f;
+constexpr const float minVolume = 0.001f;
+const float volumeB = std::log(maxVolume / minVolume);
+
+float Tracklist::setVolume(float volume) {
+  volume = std::min(1.0f, std::max(0.0f, volume));
+  m_adjustedVolume = std::exp(volume * volumeB) * minVolume;
+  return m_volume = volume;
 }
 
 /// @brief Equal crossfade
