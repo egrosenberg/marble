@@ -1,8 +1,12 @@
 #include "tracklist.h"
 #include "song.h"
 
+#include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <filesystem>
 #include <iostream>
+#include <iterator>
 
 Tracklist::Tracklist(const std::vector<std::string> &fnames, uint32_t sampleRate, uint16_t channels) {
   m_sampleRate = sampleRate;
@@ -171,6 +175,20 @@ void Tracklist::getFrames(float *pOutput, uint32_t frameCount) {
   }
 }
 
+std::vector<std::string> Tracklist::getSongNames() {
+  std::vector<std::string> songNames;
+  std::transform(m_fnames->begin(), m_fnames->end(), std::back_inserter(songNames), [](const std::string &fname) {
+    std::filesystem::path fpath(fname);
+    return std::string(fpath.stem().generic_string());
+  });
+  return songNames;
+}
+
+std::string Tracklist::getCurrentSongName() {
+  std::filesystem::path fpath(m_currentSong->getFileName());
+  return fpath.stem().generic_string();
+}
+
 void Tracklist::skip(bool fade) {
   if (m_currentSong && m_mixedSong) {
     throw "Cannot skip while transitioning";
@@ -196,6 +214,22 @@ void Tracklist::unskip(bool fade) {
 void Tracklist::restart() {
   delete m_mixedSong;
   m_currentSong->seekFrame(0);
+}
+
+void Tracklist::seekFrame(uint64_t frame) {
+  if (m_currentSong) {
+    m_currentSong->seekFrame(frame);
+  }
+}
+void Tracklist::seekTime(float seconds) {
+  if (m_currentSong) {
+    m_currentSong->seekTime(seconds);
+  }
+}
+void Tracklist::seekPercent(float percent) {
+  if (m_currentSong) {
+    m_currentSong->seekPercent(percent);
+  }
 }
 
 constexpr const float maxVolume = 1.0f;

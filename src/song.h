@@ -2,16 +2,26 @@
 #define SONG_H
 
 #include "dr_mp3.h"
+#include <chrono>
 #include <cstdint>
 #include <cstring>
+#include <mutex>
+#include <string>
 
 #define ENDED_TOLERANCE 2000
+
+typedef struct song_meta {
+  std::string name;
+  uint64_t startsAt;
+  uint64_t duration;
+} song_meta;
 
 class Song {
 private:
   char *m_fname;
 
   drmp3 m_song;
+  std::mutex m_songMutex;
   uint32_t m_channels;         // Number of audio channels
   uint32_t m_sampleRate;       // Sample rate of audio file
   uint32_t m_targetSampleRate; // Playback sample rate
@@ -19,6 +29,8 @@ private:
   uint64_t m_frames;           // Total number of PCM frames in file
   double m_duration;           // Duration of song in seconds
   float m_volume;              // Volume scalar (0.0 - 1.0)
+
+  std::chrono::time_point<std::chrono::system_clock> *m_startsAt;
 
   // Fade frames are based on TARGET sample rate (process after getting frames)
   bool m_hasFadeOut;       // Flag to trigger fade out
@@ -46,10 +58,14 @@ public:
   char *getFileName() { return m_fname; };
   uint64_t getFrameCount() { return m_frames; }
 
+  song_meta getMeta();
+
   float getVolume() { return m_volume; }
   void setVolume(float volume);
 
   void seekFrame(uint64_t frame);
+  void seekPercent(float percent);
+  void seekTime(float);
 
   void setFadeIn(double start, double duration);
   void setFadeOut(double end, double duration);

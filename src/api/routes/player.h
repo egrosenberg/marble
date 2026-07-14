@@ -5,28 +5,36 @@
 
 namespace api::player {
 
-void playPause(API_FN_ARGS);
-void skip(API_FN_ARGS);
-void unskip(API_FN_ARGS);
-void restart(API_FN_ARGS);
-void updateVolume(API_FN_ARGS);
+// POST functions
+API_FN(playPause)
+API_FN(skip)
+API_FN(unskip)
+API_FN(restart)
+API_FN(updateVolume)
+API_FN(seekPercent)
+API_FN(seekTime)
+
+// GET functions
+API_FN(getCurrentSong)
+API_FN(getSongNames)
 
 inline const api::fn_map postMap = {{"play-pause", &playPause},
                                     {"unskip", &unskip},
                                     {"skip", &skip},
                                     {"restart", &restart},
-                                    {"update-volume", &updateVolume}};
+                                    {"update-volume", &updateVolume},
+                                    {"seek-percent", &seekPercent},
+                                    {"seek-time", &seekTime}};
 
-inline void POST(const httplib::Request &req, httplib::Response &res, const api::context &ctx) {
-  const api::fn_map fnMap = {{"play-pause", &playPause}};
+inline const api::fn_map getMap = {{"get-current-song", &getCurrentSong}, {"get-song-names", &getSongNames}};
 
-  api::handleRequest(req, res, ctx, postMap);
-}
+POST_HANDLER
+GET_HANDLER
 
 } // namespace api::player
 
 namespace api::handlers {
-inline api::route_handlers player = {nullptr, &api::player::POST};
+BIND_ROUTE(player);
 }
 
 #endif

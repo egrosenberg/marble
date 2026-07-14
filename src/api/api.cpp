@@ -40,6 +40,10 @@ void api::handleRequest(const httplib::Request &req, httplib::Response &res, con
 
     nlohmann::json options = api::getOpts(req);
     nlohmann::json data;
+    data["data"] = nlohmann::json::object();
+
+    std::cout << "Calling " << routeName << std::endl;
+    std::cout << "with options" << options.dump(2) << std::endl;
 
     // find api function (if exists)
     api::fn_map::const_iterator function = fnMap.find(routeName);

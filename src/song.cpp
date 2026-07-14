@@ -2,8 +2,10 @@
 
 #include <chrono>
 #include <cmath>
+#include <cstdint>
 #include <cstring>
 #include <ctime>
+#include <filesystem>
 #include <iostream>
 #include <vector>
 
@@ -31,6 +33,8 @@ Song::Song(const char *fname, uint32_t targetSampleRate) {
   m_duration = 1.0f * m_sampleDuration * m_frames;
   m_volume = 1.0f;
 
+  m_startsAt = nullptr;
+
   m_hasFadeOut = false;
   m_fadeOutStart = 0;
   m_fadeOutEnd = 0;
@@ -54,6 +58,10 @@ Song::Song(const char *fname, uint32_t targetSampleRate) {
 }
 
 void Song::getFrames(float *pOutput, uint32_t frameCount) {
+  if (m_song.currentPCMFrame == 0) {
+    m_startsAt = new std::chrono::time_point<std::chrono::system_clock>(std::chrono::system_clock::now());
+  }
+
   // std::chrono::time_point<std::chrono::high_resolution_clock> start =
   // std::chrono::high_resolution_clock::now();
 
@@ -63,7 +71,9 @@ void Song::getFrames(float *pOutput, uint32_t frameCount) {
   uint32_t nSamples = frameCount * m_channels;
 
   if (m_sampleRate == m_targetSampleRate) {
+    m_songMutex.lock();
     drmp3_read_pcm_frames_f32(&m_song, frameCount, pOutput);
+    m_songMutex.unlock();
   }
   // Need to convert real audio frames into desired output frames
   else {
@@ -75,7 +85,9 @@ void Song::getFrames(float *pOutput, uint32_t frameCount) {
 
     // Store actual output frames in a buffer
     float *realOutput = (float *)malloc(sizeof(float) * realSampleCount);
+    m_songMutex.lock();
     drmp3_read_pcm_frames_f32(&m_song, realFrameCount, realOutput);
+    m_songMutex.unlock();
 
     // construct splines for each channel
     std::vector<double> X;
@@ -169,7 +181,30 @@ void Song::setVolume(float volume) {
   }
 }
 
-void Song::seekFrame(uint64_t frame) { drmp3_seek_to_pcm_frame(&m_song, frame); }
+void Song::seekFrame(uint64_t frame) {
+  if (!m_song.pSeekPoints) {
+    uint32_t seekPointCount = m_frames;
+    drmp3_calculate_seek_points(&m_song, &seekPointCount, m_song.pSeekPoints);
+    std::cout << "Calculated " << seekPointCount << " seek points\n";
+  }
+  frame = std::min(m_song.totalPCMFrameCount, frame);
+
+  std::cout << "Seeking frame " << frame << " of " << m_frames << std::endl;
+  m_songMutex.lock();
+  drmp3_seek_to_pcm_frame(&m_song, frame);
+  m_songMutex.unlock();
+  std::cout << "Current frame: " << m_song.currentPCMFrame << std::endl;
+}
+
+void Song::seekTime(float seconds) {
+  uint64_t frame = m_sampleRate * seconds;
+  seekFrame(frame);
+}
+
+void Song::seekPercent(float percent) {
+  percent = std::min(1.0f, std::max(0.0f, percent));
+  seekFrame(std::floor(percent * m_frames));
+}
 
 /// @brief Set fade in
 /// @param start:     start time of fade (in seconds)
@@ -219,7 +254,23 @@ void Song::removeFadeIn() { m_hasFadeIn = false; }
 /// @brief remove fade out
 void Song::removeFadeOut() { m_hasFadeOut = false; }
 
+song_meta Song::getMeta() {
+  song_meta meta;
+  meta.duration = m_frames / m_sampleRate * 1000;
+
+  std::filesystem::path fpath(m_fname);
+  meta.name = fpath.stem().generic_string();
+
+  meta.startsAt =
+      m_startsAt ? std::chrono::duration_cast<std::chrono::milliseconds>(m_startsAt->time_since_epoch()).count() : -1;
+
+  return meta;
+}
+
 Song::~Song() {
   delete m_fname;
   drmp3_uninit(&m_song);
+
+  if (m_startsAt)
+    delete m_startsAt;
 }

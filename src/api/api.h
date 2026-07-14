@@ -7,6 +7,16 @@
 #include <map>
 
 #define API_FN_ARGS const nlohmann::json &, nlohmann::json &, const api::context &
+#define API_FN_ARGS_NAMED const nlohmann::json &options, nlohmann::json &response, const api::context &ctx
+#define API_FN(name) void name(API_FN_ARGS);
+#define API_FN_DEF(ns, name) void ns::name(API_FN_ARGS_NAMED)
+#define API_REQUEST_HANDLE_ARGS const httplib::Request &req, httplib::Response &res, const api::context &ctx
+#define POST_HANDLER                                                                                                   \
+  inline void POST(API_REQUEST_HANDLE_ARGS) { api::handleRequest(req, res, ctx, postMap); }
+#define GET_HANDLER                                                                                                    \
+  inline void GET(API_REQUEST_HANDLE_ARGS) { api::handleRequest(req, res, ctx, getMap); }
+#define NULL_GET_HANDLER inline api::request = nullptr;
+#define BIND_ROUTE(name) inline api::route_handlers name = {&api::name::GET, &api::name::POST};
 
 namespace api {
 

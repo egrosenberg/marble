@@ -1,6 +1,7 @@
 #ifndef TRACK_H
 #define TRACK_H
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -39,6 +40,10 @@ public:
 
   void getFrames(float *pOutput, uint32_t frameCount);
 
+  std::vector<std::string> getSongNames();
+  std::string getCurrentSongName();
+  song_meta getCurrentSongMeta() { return m_currentSong->getMeta(); }
+
   uint16_t length() { return m_fnames->size(); }
 
   bool isPlaying() { return !m_paused; }
@@ -51,6 +56,10 @@ public:
   void skip(bool fade = true);
   void unskip(bool fade = true);
   void restart();
+
+  void seekFrame(uint64_t);
+  void seekPercent(float);
+  void seekTime(float);
 
   float setVolume(float volume);
 
