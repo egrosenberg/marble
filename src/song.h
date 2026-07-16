@@ -1,6 +1,7 @@
 #ifndef SONG_H
 #define SONG_H
 
+#include "MP3MetaDataReader.h"
 #include "dr_mp3.h"
 #include <chrono>
 #include <cstdint>
@@ -14,11 +15,17 @@ typedef struct song_meta {
   std::string name;
   uint64_t startsAt;
   uint64_t duration;
+
+  std::string title;
+  std::string artist;
+  std::string album;
+  std::string year;
 } song_meta;
 
 class Song {
 private:
   char *m_fname;
+  MP3MetaDataReader::MetaData m_fileMeta;
 
   drmp3 m_song;
   std::mutex m_songMutex;

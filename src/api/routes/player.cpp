@@ -28,6 +28,10 @@ API_FN_DEF(NAMESPACE, getCurrentSong) {
   response["data"]["name"] = meta.name;
   response["data"]["duration"] = meta.duration;
   response["data"]["startsAt"] = meta.startsAt;
+  response["data"]["title"] = meta.title;
+  response["data"]["artist"] = meta.artist;
+  response["data"]["album"] = meta.album;
+  response["data"]["year"] = meta.year;
 }
 
 API_FN_DEF(NAMESPACE, getSongNames) { response["data"] = ctx.activeTL->getSongNames(); }

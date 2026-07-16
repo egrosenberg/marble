@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 
+#include "MP3MetaDataReader.h"
 #include "spline.h"
 
 #include "lib/math.h"
@@ -42,6 +43,9 @@ Song::Song(const char *fname, uint32_t targetSampleRate) {
   m_hasFadeIn = false;
   m_fadeInStart = 0;
   m_fadeInEnd = 0;
+
+  // Read metadata
+  m_fileMeta = MP3MetaDataReader::readMetadata(fname);
 
   std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
   // std::time_t t_now = std::chrono::system_clock::to_time_t(now);
@@ -263,6 +267,11 @@ song_meta Song::getMeta() {
 
   meta.startsAt =
       m_startsAt ? std::chrono::duration_cast<std::chrono::milliseconds>(m_startsAt->time_since_epoch()).count() : -1;
+
+  meta.title = m_fileMeta.title;
+  meta.artist = m_fileMeta.artist;
+  meta.album = m_fileMeta.album;
+  meta.year = m_fileMeta.year;
 
   return meta;
 }
