@@ -9,6 +9,8 @@
 #include <iterator>
 #include <sys/stat.h>
 
+// TODO: Better handling for when tracklist is empty, or stops being empty
+
 Tracklist::Tracklist(const std::vector<std::string> &fnames, uint32_t sampleRate, uint16_t channels) {
   m_sampleRate = sampleRate;
   m_channels = channels;
