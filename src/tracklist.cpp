@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <iostream>
 #include <iterator>
+#include <sys/stat.h>
 
 Tracklist::Tracklist(const std::vector<std::string> &fnames, uint32_t sampleRate, uint16_t channels) {
   m_sampleRate = sampleRate;
@@ -200,6 +201,17 @@ void Tracklist::skip(bool fade) {
   }
 }
 
+void Tracklist::skipTo(int32_t index, bool fade) {
+  if (m_currentSong && m_mixedSong) {
+    throw "Cannot skip while transitioning";
+  }
+  if (fade) {
+    mixSong(index);
+  } else {
+    loadSong(index);
+  }
+}
+
 void Tracklist::unskip(bool fade) {
   if (m_currentSong && m_mixedSong) {
     throw "Cannot skip while transitioning";
@@ -214,6 +226,37 @@ void Tracklist::unskip(bool fade) {
 void Tracklist::restart() {
   delete m_mixedSong;
   m_currentSong->seekFrame(0);
+}
+
+bool Tracklist::loadFile(std::string path, bool fade) {
+  if (m_currentSong && m_mixedSong) {
+    throw "Cannot skip while transitioning";
+  }
+  // Verify that file exists
+  struct stat buffer;
+  if (stat(path.c_str(), &buffer) != 0) {
+    return false;
+  }
+
+  // Add fname to list
+  m_fnames->insert(m_fnames->begin() + m_cursor + 1, path);
+  // Skip to newly added song
+  skip();
+
+  return true;
+}
+
+bool Tracklist::appendFile(std::string path) {
+  // Verify that file exists
+  struct stat buffer;
+  if (stat(path.c_str(), &buffer) != 0) {
+    return false;
+  }
+
+  // Add fname to list
+  m_fnames->push_back(path);
+
+  return true;
 }
 
 void Tracklist::seekFrame(uint64_t frame) {

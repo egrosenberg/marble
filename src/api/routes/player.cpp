@@ -9,6 +9,9 @@ API_FN_DEF(NAMESPACE, playPause) {
 
 API_FN_DEF(NAMESPACE, skip) { ctx.activeTL->skip(); }
 
+// options = { index: int }
+API_FN_DEF(NAMESPACE, skipTo) { ctx.activeTL->skipTo((nlohmann::json::number_integer_t)options["index"]); }
+
 API_FN_DEF(NAMESPACE, unskip) { ctx.activeTL->unskip(); }
 
 API_FN_DEF(NAMESPACE, restart) { ctx.activeTL->restart(); }
@@ -17,11 +20,21 @@ API_FN_DEF(NAMESPACE, updateVolume) {
   response["data"] = ctx.activeTL->setVolume((nlohmann::json::number_float_t)options["level"]);
 }
 
-// options = { precent: float }
+// options = { percent: float }
 API_FN_DEF(NAMESPACE, seekPercent) { ctx.activeTL->seekPercent((nlohmann::json::number_float_t)options["percent"]); }
 
 // options = { seconds: float }
 API_FN_DEF(NAMESPACE, seekTime) { ctx.activeTL->seekTime((nlohmann::json::number_float_t)options["seconds"]); }
+
+// options = { path: string }
+API_FN_DEF(NAMESPACE, loadFile) {
+  response["data"] = ctx.activeTL->loadFile((nlohmann::json::string_t)options["path"]);
+}
+
+// options = { path: string }
+API_FN_DEF(NAMESPACE, appendFile) {
+  response["data"] = ctx.activeTL->appendFile((nlohmann::json::string_t)options["path"]);
+}
 
 API_FN_DEF(NAMESPACE, getCurrentSong) {
   song_meta meta = ctx.activeTL->getCurrentSongMeta();

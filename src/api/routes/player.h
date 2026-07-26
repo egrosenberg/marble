@@ -8,23 +8,24 @@ namespace api::player {
 // POST functions
 API_FN(playPause)
 API_FN(skip)
+API_FN(skipTo)
 API_FN(unskip)
 API_FN(restart)
 API_FN(updateVolume)
 API_FN(seekPercent)
 API_FN(seekTime)
+API_FN(loadFile)
+API_FN(appendFile)
 
 // GET functions
 API_FN(getCurrentSong)
 API_FN(getSongNames)
 
-inline const api::fn_map postMap = {{"play-pause", &playPause},
-                                    {"unskip", &unskip},
-                                    {"skip", &skip},
-                                    {"restart", &restart},
-                                    {"update-volume", &updateVolume},
-                                    {"seek-percent", &seekPercent},
-                                    {"seek-time", &seekTime}};
+inline const api::fn_map postMap = {
+    {"play-pause", &playPause},     {"unskip", &unskip},      {"skip", &skip},
+    {"skip-to", &skipTo},           {"restart", &restart},    {"update-volume", &updateVolume},
+    {"seek-percent", &seekPercent}, {"seek-time", &seekTime}, {"load-file", &loadFile},
+    {"append-file", &appendFile}};
 
 inline const api::fn_map getMap = {{"get-current-song", &getCurrentSong}, {"get-song-names", &getSongNames}};
 

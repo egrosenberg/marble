@@ -54,8 +54,12 @@ public:
   void playPause() { m_paused = !m_paused; }
 
   void skip(bool fade = true);
+  void skipTo(int32_t index, bool fade = true);
   void unskip(bool fade = true);
   void restart();
+
+  bool loadFile(std::string path, bool fade = true);
+  bool appendFile(std::string path);
 
   void seekFrame(uint64_t);
   void seekPercent(float);
